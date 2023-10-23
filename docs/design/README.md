@@ -75,3 +75,58 @@
     Feedback -u-* Feedback.updatedAt
 
 @enduml
+
+## ER-модель
+
+@startuml
+    entity User {
+        id: Int
+        username: Text
+        firstName: Text
+        lastName: Text
+        email: Text
+        password: Text
+    }
+
+    entity Role {
+        id: Int
+        name: Text
+        description: Text
+    }
+
+    entity Permission {
+        id: Int
+        name: Text
+    }
+
+    entity MediaRequest {
+        id: Int
+        name: Text
+        type: Text
+        keywords: Text
+        description: Text
+        updatedAt: Datetime
+        createdAt: Datetime
+    }
+
+    entity Feedback {
+        id: Int
+        body: Text
+        rating: Float
+        updatedAt: Datetime
+        createdAt: Datetime
+    }
+
+    entity RoleHasPermission {
+        roleId: Int
+        permissionId: Int
+    }
+
+    User "0.*" -d- "1.1" Role
+    User "1.1" -u- "0.*" MediaRequest
+    User "1.1" -u- "0.*" Feedback
+    MediaRequest "1.1" -r- "0.*" Feedback
+    Role "1.1" -d "0.*" RoleHasPermission
+    Permission "1.1" -u "0.*" RoleHasPermission
+
+@enduml
