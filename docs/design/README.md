@@ -79,6 +79,7 @@
 ## ER-модель
 
 @startuml
+
     entity User {
         id: Int
         username: Text
@@ -130,3 +131,9 @@
     Permission "1.1" -u "0.*" RoleHasPermission
 
 @enduml
+
+## Реляційна схема
+
+<p align="center">
+  <img src="./media/relationalSchema.png" width="600">
+</p>
