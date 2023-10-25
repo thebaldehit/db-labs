@@ -37,7 +37,10 @@
     Permission -d-* Permission.name
     Permission -d-* Permission.id
 
-    Role "0.*" -d- "0.*" Permission
+    entity RoleHasPermission
+
+    Role "1.1" -d- "0.*" RoleHasPermission
+    Permission "1.1" -u- "0.*" RoleHasPermission
 
     entity MediaRequest
     entity MediaRequest.id #FFFFFF
@@ -57,6 +60,30 @@
     MediaRequest -u-* MediaRequest.createdAt
 
     User "1.1" -u- "0.*" MediaRequest
+
+    entity Source
+    entity Source.id #FFFFFF
+    entity Source.name #FFFFFF
+    entity Source.url #FFFFFF
+
+    Source.id -u-* Source
+    Source.name -u-* Source
+    Source.url -u-* Source
+
+    Source "1.1" -u- "0.*" MediaRequest
+
+    entity Quarantine
+    entity Quarantine.id #FFFFFF
+    entity Quarantine.displayName #FFFFFF
+    entity Quarantine.updatedAt #FFFFFF
+    entity Quarantine.createdAt #FFFFFF
+
+    Quarantine.id -u-* Quarantine
+    Quarantine.displayName -u-* Quarantine
+    Quarantine.updatedAt -u-* Quarantine
+    Quarantine.createdAt -u-* Quarantine
+
+    Quarantine "1.1" -u- "0.*" Source
 
     entity Feedback
     entity Feedback.id #FFFFFF
@@ -80,53 +107,79 @@
 
 @startuml
 
-    entity User {
-        id: Int
-        username: Text
-        firstName: Text
-        lastName: Text
-        email: Text
-        password: Text
+    namespace AccountManagement {
+        entity User <<ENTITY>> {
+            id: Int
+            username: Text
+            firstName: Text
+            lastName: Text
+            email: Text
+            password: Text
+        }
     }
 
-    entity Role {
-        id: Int
-        name: Text
-        description: Text
+    namespace AccessPolicy {
+        entity Role <<ENTITY>> #ffff00 {
+            id: Int
+            name: Text
+            description: Text
+        }
+
+        object UserRole #ffffff
+        object TechnicalExpertRole #ffffff
+
+        entity Permission <<ENTITY>> {
+            id: Int
+            name: Text
+        }
+
+        entity RoleHasPermission <<ENTITY>> {
+            roleId: Int
+            permissionId: Int
+        }
     }
 
-    entity Permission {
-        id: Int
-        name: Text
-    }
+    namespace MediaContentManagement {
+        entity MediaRequest <<ENTITY>> {
+            id: Int
+            name: Text
+            type: Text
+            keywords: Text
+            description: Text
+            updatedAt: Datetime
+            createdAt: Datetime
+        }
 
-    entity MediaRequest {
-        id: Int
-        name: Text
-        type: Text
-        keywords: Text
-        description: Text
-        updatedAt: Datetime
-        createdAt: Datetime
-    }
+        entity Feedback <<ENTITY>> {
+            id: Int
+            body: Text
+            rating: Float
+            updatedAt: Datetime
+            createdAt: Datetime
+        }
 
-    entity Feedback {
-        id: Int
-        body: Text
-        rating: Float
-        updatedAt: Datetime
-        createdAt: Datetime
-    }
+        entity Source <<ENTITY>> {
+            id: Int
+            name: Text
+            url: Text
+        }
 
-    entity RoleHasPermission {
-        roleId: Int
-        permissionId: Int
+        entity Quarantine <<ENTITY>> {
+            id: Int
+            displayName: Text
+            updatedAt: DateTime
+            createdAt: DateTime
+        }
     }
 
     User "0.*" -d- "1.1" Role
     User "1.1" -u- "0.*" MediaRequest
     User "1.1" -u- "0.*" Feedback
+    UserRole .u.> Role
+    TechnicalExpertRole .u.> Role
     MediaRequest "1.1" -r- "0.*" Feedback
+    Source "1.1" -r- "0.*" MediaRequest
+    Quarantine "1.1" -r- "0.*" Source
     Role "1.1" -d "0.*" RoleHasPermission
     Permission "1.1" -u "0.*" RoleHasPermission
 
