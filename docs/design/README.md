@@ -4,109 +4,129 @@
 
 @startuml
 
-    entity User
-    entity User.id #FFFFFF
-    entity User.username #FFFFFF
-    entity User.firstName #FFFFFF
-    entity User.lastName #FFFFFF
-    entity User.email #FFFFFF
-    entity User.password #FFFFFF
+entity User
+entity User.id #FFFFFF
+entity User.username #FFFFFF
+entity User.firstName #FFFFFF
+entity User.lastName #FFFFFF
+entity User.email #FFFFFF
+entity User.password #FFFFFF
 
-    User.username -r-* User
-    User.firstName -u-* User
-    User.lastName -u-* User
-    User.email -u-* User
-    User.password -u-* User
-    User.id -l-* User
+User.username -r-* User
+User.firstName -u-* User
+User.lastName -u-* User
+User.email -u-* User
+User.password -u-* User
+User.id -l-* User
 
-    entity Role
-    entity Role.name #FFFFFF
-    entity Role.description #FFFFFF
-    entity Role.id #FFFFFF
+entity Role
+entity Role.name #FFFFFF
+entity Role.description #FFFFFF
+entity Role.id #FFFFFF
 
-    Role.name -u-* Role
-    Role.description -u-* Role
-    Role.id -u-* Role
+Role.name -u-* Role
+Role.description -u-* Role
+Role.id -u-* Role
 
-    User "0.*" -d- "1.1" Role
+User "0.*" -d- "1.1" Role
 
-    entity Permission
-    entity Permission.name #FFFFFF
-    entity Permission.id #FFFFFF
+entity Permission
+entity Permission.name #FFFFFF
+entity Permission.id #FFFFFF
 
-    Permission -d-* Permission.name
-    Permission -d-* Permission.id
+Permission -d-* Permission.name
+Permission -d-* Permission.id
 
-    entity RoleHasPermission
+entity RoleHasPermission
 
-    Role "1.1" -d- "0.*" RoleHasPermission
-    Permission "1.1" -u- "0.*" RoleHasPermission
+Role "1.1" -d- "0.*" RoleHasPermission
+Permission "1.1" -u- "0.*" RoleHasPermission
 
-    entity MediaRequest
-    entity MediaRequest.id #FFFFFF
-    entity MediaRequest.name #FFFFFF
-    entity MediaRequest.type #FFFFFF
-    entity MediaRequest.keywords #FFFFFF
-    entity MediaRequest.description #FFFFFF
-    entity MediaRequest.updatedAt #FFFFFF
-    entity MediaRequest.createdAt #FFFFFF
+entity MediaRequest
+entity MediaRequest.id #FFFFFF
+entity MediaRequest.name #FFFFFF
+entity MediaRequest.type #FFFFFF
+entity MediaRequest.keywords #FFFFFF
+entity MediaRequest.description #FFFFFF
+entity MediaRequest.updatedAt #FFFFFF
+entity MediaRequest.createdAt #FFFFFF
 
-    MediaRequest.id -r-* MediaRequest
-    MediaRequest.name --* MediaRequest
-    MediaRequest.type -u-* MediaRequest
-    MediaRequest.keywords -u-* MediaRequest
-    MediaRequest.description -u-* MediaRequest
-    MediaRequest -u-* MediaRequest.updatedAt
-    MediaRequest -u-* MediaRequest.createdAt
+MediaRequest.id -r-* MediaRequest
+MediaRequest.name --* MediaRequest
+MediaRequest.type -u-* MediaRequest
+MediaRequest.keywords -u-* MediaRequest
+MediaRequest.description -u-* MediaRequest
+MediaRequest -u-* MediaRequest.updatedAt
+MediaRequest -u-* MediaRequest.createdAt
 
-    User "1.1" -u- "0.*" MediaRequest
+User "1.1" -u- "0.*" MediaRequest
 
-    entity Source
-    entity Source.id #FFFFFF
-    entity Source.name #FFFFFF
-    entity Source.url #FFFFFF
+entity Source
+entity Source.id #FFFFFF
+entity Source.name #FFFFFF
+entity Source.url #FFFFFF
 
-    Source.id -u-* Source
-    Source.name -u-* Source
-    Source.url -u-* Source
+Source.id -u-* Source
+Source.name -u-* Source
+Source.url -u-* Source
 
-    Source "1.1" -u- "0.*" MediaRequest
 
-    entity Quarantine
-    entity Quarantine.id #FFFFFF
-    entity Quarantine.displayName #FFFFFF
-    entity Quarantine.updatedAt #FFFFFF
-    entity Quarantine.createdAt #FFFFFF
+entity BasedOn
 
-    Quarantine.id -u-* Quarantine
-    Quarantine.displayName -u-* Quarantine
-    Quarantine.updatedAt -u-* Quarantine
-    Quarantine.createdAt -u-* Quarantine
+entity Tag
+entity Tag.name  #FFFFFF
+entity Tag.id  #FFFFFF
 
-    Quarantine "1.1" -u- "0.*" Source
+Tag.id -u-* Tag
+Tag.name -* Tag
 
-    entity Feedback
-    entity Feedback.id #FFFFFF
-    entity Feedback.body #FFFFFF
-    entity Feedback.rating #FFFFFF
-    entity Feedback.createdAt #FFFFFF
-    entity Feedback.updatedAt #FFFFFF
 
-    User "1.1" -u- "0.*" Feedback
-    MediaRequest "1.1" -r- "0.*" Feedback
+entity Label
 
-    Feedback -r-* Feedback.id
-    Feedback -d-* Feedback.body
-    Feedback -u-* Feedback.rating
-    Feedback -u-* Feedback.createdAt
-    Feedback -u-* Feedback.updatedAt
+Source "1.1" -u- "0.*" BasedOn
+BasedOn "0.*" -u- "1.1" MediaRequest
 
+Source "1.1" -r- "0.*" Label
+Label "0.*" -- "1.1" Tag
+
+
+entity State
+entity State.id #FFFFFF
+entity State.displayName #FFFFFF
+
+State.id -u-* State 
+State.displayName -u-* State 
+
+
+entity Action
+entity Action.createdAt  #FFFFFF
+Action.createdAt -u-* Action
+
+Action "0.*" -u- "1.1" User
+Action "0.*" -u- "0.1" MediaRequest
+Action "0.*" -- "0.1" Source
+Action "0.*" -- "1.1" State
+
+entity Feedback
+entity Feedback.id #FFFFFF
+entity Feedback.body #FFFFFF
+entity Feedback.rating #FFFFFF
+entity Feedback.createdAt #FFFFFF
+entity Feedback.updatedAt #FFFFFF
+
+User "1.1" -u- "0.*" Feedback
+MediaRequest "1.1" -r- "0.*" Feedback
+
+Feedback -r-* Feedback.id
+Feedback -d-* Feedback.body
+Feedback -u-* Feedback.rating
+Feedback -u-* Feedback.createdAt
+Feedback -u-* Feedback.updatedAt
 @enduml
 
 ## ER-модель
 
 @startuml
-
     namespace AccountManagement {
         entity User <<ENTITY>> {
             id: Int
@@ -150,6 +170,10 @@
             createdAt: Datetime
         }
 
+        object Subscribe #ffffff
+        object Unsubscribe #ffffff
+        object Quarantine #ffffff
+
         entity Feedback <<ENTITY>> {
             id: Int
             body: Text
@@ -161,27 +185,58 @@
         entity Source <<ENTITY>> {
             id: Int
             name: Text
-            url: Text
+            url: Int
         }
 
-        entity Quarantine <<ENTITY>> {
+        entity BasedOn <<ENTITY>> {
+            mediaRequestId: Int
+            sourceId: Int
+        }
+
+        entity Action <<ENTITY>> {
+            createdAt: Datetime
+            stateId: Int
+            mediaRequestId: Int
+            sourceId: Int
+            userId: Int
+        }
+
+        entity State <<ENTITY>> #ffff00{
             id: Int
             displayName: Text
-            updatedAt: DateTime
-            createdAt: DateTime
+        }
+
+        entity Label <<ENTITY>> {
+            tagId: Int
+            sourceId: Int
+        }
+
+        entity Tag <<ENTITY>> {
+            id: Int
+            name: Text
         }
     }
 
+
     User "0.*" -d- "1.1" Role
+    Role "1.1" -d- "0.*" RoleHasPermission
+    Permission "1.1" -u- "0.*" RoleHasPermission
     User "1.1" -u- "0.*" MediaRequest
+    Source "1.1" -u- "0.*" BasedOn
+    BasedOn "0.*" -u- "1.1" MediaRequest
+    Source "1.1" -r- "0.*" Label
+    Label "0.*" -- "1.1" Tag
+    Action "0.*" -u- "1.1" User
+    Action "0.*" -u- "0.1" MediaRequest
+    Action "0.*" -- "0.1" Source
+    Action "0.*" -- "1.1" State
     User "1.1" -u- "0.*" Feedback
+    MediaRequest "1.1" -r- "0.*" Feedback
     UserRole .u.> Role
     TechnicalExpertRole .u.> Role
-    MediaRequest "1.1" -r- "0.*" Feedback
-    Source "1.1" -r- "0.*" MediaRequest
-    Quarantine "1.1" -r- "0.*" Source
-    Role "1.1" -d "0.*" RoleHasPermission
-    Permission "1.1" -u "0.*" RoleHasPermission
+    Quarantine .u.> State
+    Unsubscribe .u.> State
+    Subscribe .u.> State
 
 @enduml
 
