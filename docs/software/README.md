@@ -350,3 +350,237 @@ COMMIT;
 ```
 
 ## RESTfull сервіс для управління даними
+
+### Головний файл server.js
+
+```js
+'use strict';
+
+require('dotenv').config();
+const express = require('express');
+const { PORT } = require('./config/config.js');
+const userRouter = require('./routes/userRouter.js');
+
+const app = express();
+
+app.use(express.json());
+app.use('/api', userRouter);
+
+app.listen(PORT);
+```
+
+### Роутер userRouter.js
+
+```js
+const { Router } = require('express');
+const { createUser, getAllUsers, getUser, updateUser, deleteUser } = require('../services/userServices.js');
+
+const router = Router();
+
+router.post('/', async (req, res) => {
+  try {
+    await createUser(req.body);
+    res.status(200).end('ok');
+  } catch (e) {
+    const code = e.code ? e.code : 400;
+    res.status(code).end(e.message);
+  }
+});
+
+router.get('/', async (req, res) => {
+  try {
+    const users = await getAllUsers(req.body);
+    res.status(200).end(users);
+  } catch (e) {
+    const code = e.code ? e.code : 400;
+    res.status(code).end(e.message);
+  }
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    const users = await getUser(req.params);
+    res.status(200).end(users);
+  } catch (e) {
+    const code = e.code ? e.code : 400;
+    res.status(code).end(e.message);
+  }
+});
+
+router.put('/', async (req, res) => {
+  try {
+    const result = await updateUser(req.body);
+    res.status(200).end(result);
+  } catch (e) {
+    const code = e.code ? e.code : 400;
+    res.status(code).end(e.message);
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const result = await deleteUser(req.params);
+    res.status(200).end(result);
+  } catch (e) {
+    const code = e.code ? e.code : 400;
+    res.status(code).end(e.message);
+  }
+})
+
+module.exports = router;
+```
+
+### Сервіс userServices.js
+
+```js
+const crypto = require('node:crypto');
+const { createConnection } = require('../db/pool.js');
+const { DB_NAME } = require('../config/config.js');
+
+const getMaxId = async () => {
+  const sql = `SELECT MAX(id) AS maxId FROM ${DB_NAME}.user`;
+  const connection = await createConnection();
+  const [ result ] = await connection.execute(sql);
+  await connection.end();
+  return result[0].maxId;
+}
+
+const hashPassword = (password) => {
+  const hash = crypto.createHash('sha256');
+  hash.update(password);
+  const hashedPassword = hash.digest('hex');
+  return hashedPassword;
+}
+
+const objForSEnding = (array) => {
+  const users = [];
+  for (const item of array) {
+    users.push({
+      first_name: item.first_name,
+      last_name: item.last_name,
+      username: item.username,
+      email: item.email,
+    });
+  }
+  return users;
+}
+
+const validateBody = (body) => {
+  if (!body) throw new Error('No data');
+  if (!body.password) throw new Error('No password');
+  if (!body.email) throw new Error('No email');
+  if (!body.username) throw new Error('No username');
+  if (!body.first_name) throw new Error('No firstName');
+  if (!body.last_name) throw new Error('No lastName');
+}
+
+const createUser = async (body) => {
+  try { validateBody(body) }
+  catch (err) { throw err };
+  const maxId = await getMaxId() + 1;
+  const hashPass = hashPassword(body.password);
+  const roleId = 1;
+  const sql = `INSERT INTO ${DB_NAME}.user (id, first_name, last_name, username, email, password, role_id) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+  const values = [maxId, body.first_name, body.last_name, body.username, body.email, hashPass, roleId];
+  const connection = await createConnection();
+  try {
+    await connection.execute(sql, values);
+  } catch (e) {
+    e.code = 500;
+    throw e;
+  } finally {
+    await connection.end();
+  }
+};
+
+const getAllUsers = async (body) => {
+  const sql = `SELECT * FROM ${DB_NAME}.user`;
+  const connection = await createConnection();
+  try {
+    const [ result ] = await connection.execute(sql);
+    const users = objForSEnding(result);    
+    return JSON.stringify(users);
+  } catch (e) {
+    e.code = 500;
+    throw e;
+  } finally {
+    await connection.end();
+  }
+}
+
+const getUser = async (params) => {
+  const id = +params.id;
+  if (isNaN(id)) throw new Error('Incorrect id');
+  const sql = `SELECT * FROM ${DB_NAME}.user WHERE id = ?`;
+  const connection = await createConnection(); 
+  try {
+    const [ result ] = await connection.execute(sql, [ id ]);
+    const users = objForSEnding(result);    
+    return JSON.stringify(users);
+  } catch (e) {
+    e.code = 500;
+    throw e;
+  } finally {
+    await connection.end();
+  }
+}
+
+const updateUser = async (body) => {
+  try { validateBody(body) }
+  catch (err) { throw err };
+  const id = +body.id;
+  delete body.id;
+  if (!id || isNaN(id)) throw new Error('Incorrect id');
+  const hashPass = hashPassword(body.password);
+  const sql = `UPDATE ${DB_NAME}.user SET first_name = ?, last_name = ?, username = ?, email = ?, password = ? WHERE id = ?`;
+  const values = [body.first_name, body.last_name, body.username, body.email, hashPass, id];
+  const connection = await createConnection(); 
+  try {
+    await connection.execute(sql, values);
+    return;
+  } catch (e) {
+    e.code = 500;
+    throw e;
+  } finally {
+    await connection.end();
+  }
+}
+
+const deleteUser = async (params) => {
+  const id = +params.id;
+  if (isNaN(id)) throw new Error('Incorrect id');
+  const sql = `DELETE FROM ${DB_NAME}.user WHERE id = ?`;
+  const connection = await createConnection(); 
+  try {
+    await connection.execute(sql, [ id ]);
+    return;
+  } catch (e) {
+    e.code = 500;
+    throw e;
+  } finally {
+    await connection.end();
+  }
+}
+
+module.exports = { createUser, getAllUsers, getUser, updateUser, deleteUser };
+```
+
+### Доступ до бази даних pool.js
+
+```js
+const mysql = require('mysql2/promise');
+const { HOST, DB_USER, DB_PASS, DB_NAME } = require('../config/config.js');
+
+const createConnection = async () => {
+  const connection = await mysql.createConnection({
+    host: HOST,
+    user: DB_USER,
+    password: DB_PASS,
+    database: DB_NAME,
+    namedPlaceholders: true
+  });
+  return connection;
+};
+
+module.exports = { createConnection };
+```
